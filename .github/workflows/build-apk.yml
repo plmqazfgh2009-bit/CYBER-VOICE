@@ -1,0 +1,49 @@
+
+name: Build CYBER VOICE APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Prepare Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK components
+        run: |
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "cmake;3.22.1" "ndk;27.2.12479018"
+
+      - name: Extract project ZIP
+        run: |
+          mkdir source
+          unzip -q *.zip -d source
+
+      - name: Build APK
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Compile
+        run: |
+          cd source/CYBER_VOICE
+          gradle assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CYBER-VOICE-APK
+          path: source/CYBER_VOICE/app/build/outputs/apk/debug/app-debug.apk
